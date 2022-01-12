@@ -14,7 +14,7 @@
 			"hidden": false,
 			"password": "YOUR_AP_PASSWORD"
 		},
-		"enables_webrepl": true,
+		"enables_webrepl": false,
 		"start_policy": "fallback"
 	}
 }
