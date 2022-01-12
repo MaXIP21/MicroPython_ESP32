@@ -2,8 +2,8 @@
 	"schema": 2,
 	"known_networks": [
 		{
-			"ssid": "R0ck_Home",
-			"password": "56MqPBebugoKnocB7C8A",
+			"ssid": "YourSSID",
+			"password": "YOUR_WIFI_PASSWORD",
 			"enables_webrepl": false
 		}
 	],
@@ -12,7 +12,7 @@
 			"essid": "Micropython-Dev",
 			"channel": 11,
 			"hidden": false,
-			"password": "1n1tC0nf1g@"
+			"password": "YOUR_AP_PASSWORD"
 		},
 		"enables_webrepl": true,
 		"start_policy": "fallback"
