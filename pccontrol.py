@@ -113,7 +113,27 @@ class pc_control:
           time.sleep(self.status_timeout)
           self.write_to_tft(data)
       self.update = False
-          
+      
+    def write_to_tft1(self):
+      #self.tft.clear()
+      if "line1" in self.data and self.data["line1"] != "":
+        self.tft.text(5,5,data["line1"])
+      if "line2" in self.data and self.data["line2"] != "":
+        self.tft.text(5,20,data["line2"])
+      if "line3" in self.data and self.data["line3"] != "":
+        self.tft.text(5,35,self.data["line3"])
+      if "status" in self.data:
+        if self.data["status"] != "":
+          self.tft.text(5,35,"Status : "+self.data["status"])
+          self.data["status"] = ""
+          self.write_to_tft(self.data)
+          time.sleep(self.status_timeout)
+      self.update = False
+      
+    def Convert(self,string):
+      self.li = list(string.split(","))
+      return self.li
+      
     def monitor_data(self):
       self.initialize_display()
       self.clear_display(0)
@@ -124,9 +144,14 @@ class pc_control:
               # Reply to sender, we can analyze the message first
               _thread.sendmsg(sender, "[%s] Hi %s, received your message." % (_thread.getSelfName(), _thread.getThreadName(sender)))
               print(typ)
-              if type(self.Convert(msg)[0] == str):
-                if self.Convert(msg)[0] == "message":
-                  self.write_to_tft(self.Convert(msg)[1])
+              ThreadMessage=self.Convert(msg)
+              if type(ThreadMessage[0] == str):
+                if ThreadMessage[0] == "message":
+                  print(ThreadMessage[1])
+                  ## create data format 
+                  
+                  self.data[ThreadMessage[1]]=ThreadMessage[2]
+                  self.write_to_tft1(self.data)
         except Exception as e:
           print(e)
           pass
