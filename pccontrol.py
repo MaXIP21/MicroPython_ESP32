@@ -1,8 +1,4 @@
-import machine, display, time, math, network, utime, gc
-try:
-  import usocket as socket
-except:
-  import socket
+import display, time, gc
 import _thread
 from machine import Pin
 
@@ -26,6 +22,7 @@ class pc_control:
       self.ledstate["led"+str(pin)]=value
       
     def send_message_to_tft(self, key, value):
+
       self.data[key]=value
       self.update = True
       
@@ -53,19 +50,19 @@ class pc_control:
       start = time.ticks_us()
       diff = start-self.keypress_time['0']
       if diff > 5000000:
+
         print("Button 0 pressed..")
         self.keypress_time['0']=time.ticks_us()
         #self.classpinControl.press_pin("resetpin")
         try:
           _thread.sendmsg(0, "pressReset")
         except Exception as e:
+          print("Exception occured in thread at pin0_handle_interrupt()")
           print(e)
           pass
-          
       else:
         #print("Button 0 lag."+str(diff))
         pass
-        
         
     
     def pin35_handle_interrupt(self, pin):
@@ -113,23 +110,7 @@ class pc_control:
           time.sleep(self.status_timeout)
           self.write_to_tft(data)
       self.update = False
-      
-    def write_to_tft1(self):
-      #self.tft.clear()
-      if "line1" in self.data and self.data["line1"] != "":
-        self.tft.text(5,5,data["line1"])
-      if "line2" in self.data and self.data["line2"] != "":
-        self.tft.text(5,20,data["line2"])
-      if "line3" in self.data and self.data["line3"] != "":
-        self.tft.text(5,35,self.data["line3"])
-      if "status" in self.data:
-        if self.data["status"] != "":
-          self.tft.text(5,35,"Status : "+self.data["status"])
-          self.data["status"] = ""
-          self.write_to_tft(self.data)
-          time.sleep(self.status_timeout)
-      self.update = False
-      
+    
     def Convert(self,string):
       self.li = list(string.split(","))
       return self.li
@@ -138,27 +119,26 @@ class pc_control:
       self.initialize_display()
       self.clear_display(0)
       while self.interrupt != True:
+        time.sleep(self.refresh_time)
+        if self.update:
+          self.write_to_tft(self.data)
         try:
           typ, sender, msg = _thread.getmsg()
           if msg:
               # Reply to sender, we can analyze the message first
-              _thread.sendmsg(sender, "[%s] Hi %s, received your message." % (_thread.getSelfName(), _thread.getThreadName(sender)))
-              print(typ)
+              _thread.sendmsg(sender, "[%s] Hi %s, received your message arrived to TFT class." % (_thread.getSelfName(), _thread.getThreadName(sender)))
+              #print(typ)
               ThreadMessage=self.Convert(msg)
               if type(ThreadMessage[0] == str):
                 if ThreadMessage[0] == "message":
-                  print(ThreadMessage[1])
+                  #print(ThreadMessage[1])
                   ## create data format 
-                  
-                  self.data[ThreadMessage[1]]=ThreadMessage[2]
-                  self.write_to_tft1(self.data)
+                  self.send_message_to_tft(ThreadMessage[1],ThreadMessage[2])
         except Exception as e:
+          print("Exception in thread %s" % _thread.getSelfName())
           print(e)
           pass
-
-        time.sleep(self.refresh_time)
-            
-        
+          
     def activate_button(self):
       self.button1=Pin(35, Pin.IN)
       self.button2=Pin(0, Pin.IN, Pin.PULL_UP)
