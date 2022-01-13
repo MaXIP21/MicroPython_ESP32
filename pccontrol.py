@@ -118,9 +118,21 @@ class pc_control:
       self.initialize_display()
       self.clear_display(0)
       while self.interrupt != True:
+        try:
+          typ, sender, msg = _thread.getmsg()
+          if msg:
+              # Reply to sender, we can analyze the message first
+              _thread.sendmsg(sender, "[%s] Hi %s, received your message." % (_thread.getSelfName(), _thread.getThreadName(sender)))
+              print(typ)
+              if type(self.Convert(msg)[0] == str):
+                if self.Convert(msg)[0] == "message":
+                  self.write_to_tft(self.Convert(msg)[1])
+        except Exception as e:
+          print(e)
+          pass
+
         time.sleep(self.refresh_time)
-        if self.update:
-          self.write_to_tft(self.data)
+            
         
     def activate_button(self):
       self.button1=Pin(35, Pin.IN)

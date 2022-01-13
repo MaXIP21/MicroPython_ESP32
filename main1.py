@@ -1,18 +1,24 @@
+
+import os
+from machine import Pin
+import time
+pin = Pin(0, Pin.IN, Pin.PULL_UP)
+if pin.value() == 0:
+  print("Don't load main selected by keypress..")
+  sys.exit(0)
+  
 from microWebSrv import MicroWebSrv
 import _thread
 import wlanlib
 import pccontrol
 import pincontrol
-import time
 import json
 import gc
-from machine import Pin
 
 WS_messages = False
 srv_run_in_thread = True
 ws_run_in_thread = False
 data = {}
-
 
 @MicroWebSrv.route('/update/<time>')
 @MicroWebSrv.route('/update/<time>/<client>') 
@@ -78,14 +84,6 @@ def main():
     srv.WebSocketThreaded       = ws_run_in_thread
     srv.WebSocketStackSize      = 4096
     srv.Start(threaded=srv_run_in_thread, stackSize=8192)
-
-
-def test():
-    mypins=pincontrol.pinControl()
-    pcControl = pccontrol.pc_control()
-    th3 = _thread.start_new_thread("PINCTL#1", mypins.startPinThread, ())
-    th2 = _thread.start_new_thread("TFTTH#1", pcControl.monitor_data, ())
-    _thread.list()
 
 if __name__ == "__main__":
     gc.collect()
