@@ -45,20 +45,30 @@ def _httpHandlerEditWithArgs(httpClient, httpResponse, args={}) :
     json_dump = json.dumps(message)
     content=json_dump
     httpResponse.WriteResponseOk( headers = None,contentType = "application/json",contentCharset = "UTF-8", content = content )
-    _thread.sendmsg(0, "pressReset")
+    _thread.sendmsg(0, '{"command" : "pressReset"}')
 
-@MicroWebSrv.route('/reboot')                     
+@MicroWebSrv.route('/forceshutdown')                     
 def _httpHandlerEditWithArgs(httpClient, httpResponse, args={}) :
     message = {}
     message["status"]="success"
-    message["task"]="reboot"
+    message["task"]="forceshutdown"
     json_dump = json.dumps(message)
     content=json_dump
     httpResponse.WriteResponseOk( headers = None,contentType = "application/json",contentCharset = "UTF-8", content = content )
-    _thread.sendmsg(0, "pressPower")
+    _thread.sendmsg(0, '{"command" : "pressPower", "seconds" : 6}')
     
+@MicroWebSrv.route('/presspower')                     
+def _httpHandlerEditWithArgs(httpClient, httpResponse, args={}) :
+    message = {}
+    message["status"]="success"
+    message["task"]="presspower"
+    json_dump = json.dumps(message)
+    content=json_dump
+    httpResponse.WriteResponseOk( headers = None,contentType = "application/json",contentCharset = "UTF-8", content = content )
+    _thread.sendmsg(0, '{"command" : "pressPower", "seconds" : 1}')
     
 def main():
+  try:
     mywlanlib=wlanlib.wlan_control()
     pcControl = pccontrol.pc_control()
     mypins=pincontrol.pinControl()
@@ -84,7 +94,10 @@ def main():
     srv.WebSocketThreaded       = ws_run_in_thread
     srv.WebSocketStackSize      = 4096
     srv.Start(threaded=srv_run_in_thread, stackSize=8192)
-
+  except Exception as e:
+    print("[EXCEPTION] - Exception in main thread : %s" % _thread.getSelfName())
+    print(e)
+    pass
 if __name__ == "__main__":
     gc.collect()
     main()

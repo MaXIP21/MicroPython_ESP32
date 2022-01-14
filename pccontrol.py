@@ -1,8 +1,7 @@
 import display, time, gc
 import _thread
+import json
 from machine import Pin
-
-
 
 class pc_control:
     def __init__(self):
@@ -60,9 +59,11 @@ class pc_control:
           print("Exception occured in thread at pin0_handle_interrupt()")
           print(e)
           pass
+          
       else:
         #print("Button 0 lag."+str(diff))
         pass
+        
         
     
     def pin35_handle_interrupt(self, pin):
@@ -111,9 +112,8 @@ class pc_control:
           self.write_to_tft(data)
       self.update = False
     
-    def Convert(self,string):
-      self.li = list(string.split(","))
-      return self.li
+    def parse_json_message(self,jsonmessage):
+        self.jsonobj=json.loads(jsonmessage)
       
     def monitor_data(self):
       self.initialize_display()
@@ -128,12 +128,11 @@ class pc_control:
               # Reply to sender, we can analyze the message first
               _thread.sendmsg(sender, "[%s] Hi %s, received your message arrived to TFT class." % (_thread.getSelfName(), _thread.getThreadName(sender)))
               #print(typ)
-              ThreadMessage=self.Convert(msg)
-              if type(ThreadMessage[0] == str):
-                if ThreadMessage[0] == "message":
-                  #print(ThreadMessage[1])
-                  ## create data format 
-                  self.send_message_to_tft(ThreadMessage[1],ThreadMessage[2])
+              self.parse_json_message(msg)
+              if "pcc_command" in self.jsonobj:
+                if self.jsonobj["pcc_command"] == "message":
+                  #self.send_message_to_tft(ThreadMessage[1],ThreadMessage[2])
+                  print("We received a command at PCC")
         except Exception as e:
           print("Exception in thread %s" % _thread.getSelfName())
           print(e)
@@ -144,3 +143,8 @@ class pc_control:
       self.button2=Pin(0, Pin.IN, Pin.PULL_UP)
       self.button1.init(trigger=Pin.IRQ_RISING, handler=self.pin35_handle_interrupt, debounce=1500, acttime=400)
       self.button2.init(trigger=Pin.IRQ_RISING, handler=self.pin0_handle_interrupt, debounce=1500, acttime=400)
+
+
+
+
+
