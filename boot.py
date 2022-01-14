@@ -1,38 +1,29 @@
 # This file is executed on every boot (including wake-boot from deepsleep)
 
 import sys
-
+import os
+import machine
+import gc
+import _thread
+from machine import Pin
+from machine import WDT
 # Set default path
 # Needed for importing modules and upip
 sys.path[1] = '/flash/lib'
 
-import machine, display, time, math, network, utime, gc
-try:
-  import usocket as socket
-except:
-  import socket
-
-from machine import Pin
-
-import gc
 gc.collect()
 
-ssid = 'R0ck_Home'
-password = '56MqPBebugoKnocB7C8A'
-
-station = network.WLAN(network.STA_IF)
-
-
-station.active(True)
-station.connect(ssid, password)
-
-while station.isconnected() == False:
-  pass
+def watchdog(self):
+      wdt = WDT(timeout=2000) 
+      while True:
+        time.sleep(1)
+        wdt.feed()
+        
+def reboot():
+  machine.reset()
   
-print('Connection successful')
-print(station.ifconfig())
-
-#p0 = Pin(0, Pin.OUT) 
+wtd = _thread.start_new_thread("WTD#1", watchdog, ())
 
 
-network.telnet.start(user="m",password="m")
+
+

@@ -6,7 +6,7 @@ from machine import Pin
 class tft_Control:
     def __init__(self):
       self.interrupt = False
-      self.refresh_time=1500
+      self.refresh_time=1000
       self.maxlines=8
     gc.collect()
     
@@ -29,18 +29,31 @@ class tft_Control:
       if "clear" in self.jsonobj:
         if self.jsonobj["clear"] == "True":
           self.tft.clear()
+      if "type" in self.jsonobj:
+        if self.jsonobj["type"] == "Warning":
+          self.tft.set_fg(0x0000FF)
+        elif self.jsonobj["type"] == "Error":
+          self.tft.set_fg(0x00FFFF)
+        self.tft.set_bg(0xFFFFFF)
+      else:
+        self.tft.set_fg(0x000000)
+        self.tft.set_bg(0xFFFFFF)
+      if "fg_color" in self.jsonobj:
+        self.tft.set_fg(int(self.jsonobj["fg_color"]))
+
       for key, value in self.jsonobj.items():
         if isinstance(key, int):
           if 1 <= key <= self.maxlines:
-            print("We got an integer which seems good")
+            # We got an line number which seems good..
             x_coord=(key-1)*self.fontheight
             self.tft.text(5,5+x_coord,value)
           else:
-            print("Too high Line number")
+            pass
+            # Too high line number.. Ignoring it.. 
         elif isinstance(key, str):
           if key == "center":
             self.tft.text(120-int(self.tft.textWidth(value)/2),67-int(self.tft.fontSize()[1]/2),value)
-    
+            
     def printjson_to_console(self):
       for key, value in self.jsonobj.items():
           print("Key:", key)
@@ -49,7 +62,6 @@ class tft_Control:
     def parse_json_message(self,jsonmessage):
         self.jsonobj=json.loads(jsonmessage)
         
-
     def tft_monitor_data(self):
       self.initialize_display()
       self.clear_display()
@@ -66,14 +78,16 @@ class tft_Control:
                       pass
               else:
                   pass
-          ntf = _thread.wait(1000)
+          ntf = _thread.wait(self.refresh_time)
           typ, sender, msg = _thread.getmsg()
           if msg:
-              _thread.sendmsg(sender, "[%s] Hi %s, received your message arrived to TFT class." % (_thread.getSelfName(), _thread.getThreadName(sender)))
+              #_thread.sendmsg(sender, "[%s] Hi %s, received your message arrived to TFT class." % (_thread.getSelfName(), _thread.getThreadName(sender)))
               self.parse_json_message(msg)
               if "tft_command" in self.jsonobj:
                 if self.jsonobj["tft_command"] == "message":
                   self.print_message_to_tft()
+                elif self.jsonobj["tft_command"] == "toggleDisplay":
+                  print("Toggling display")
         except Exception as e:
           print("Exception in thread %s" % _thread.getSelfName())
           print(e)

@@ -11,15 +11,16 @@ from microWebSrv import MicroWebSrv
 import _thread
 import wlanlib
 import pccontrol
-import pincontrol
+from pincontrol import pin_Control
+from tft_control import tft_Control
+from btn_control import btn_Control
 import json
-import gc
 
 WS_messages = False
 srv_run_in_thread = True
 ws_run_in_thread = False
 data = {}
-
+wifiRetry=5
 @MicroWebSrv.route('/update/<time>')
 @MicroWebSrv.route('/update/<time>/<client>') 
 @MicroWebSrv.route('/update/<time>/<client>/<minerstatus>')   
@@ -57,48 +58,55 @@ def _httpHandlerEditWithArgs(httpClient, httpResponse, args={}) :
     httpResponse.WriteResponseOk( headers = None,contentType = "application/json",contentCharset = "UTF-8", content = content )
     _thread.sendmsg(0, '{"command" : "pressPower", "seconds" : 6}')
     
-@MicroWebSrv.route('/presspower')                     
+@MicroWebSrv.route('/power')                     
 def _httpHandlerEditWithArgs(httpClient, httpResponse, args={}) :
     message = {}
     message["status"]="success"
-    message["task"]="presspower"
+    message["task"]="power"
     json_dump = json.dumps(message)
     content=json_dump
     httpResponse.WriteResponseOk( headers = None,contentType = "application/json",contentCharset = "UTF-8", content = content )
     _thread.sendmsg(0, '{"command" : "pressPower", "seconds" : 1}')
     
+def try_again():
+  time.sleep(10)
+  reboot()
+  
 def main():
   try:
     mywlanlib=wlanlib.wlan_control()
-    pcControl = pccontrol.pc_control()
-    mypins=pincontrol.pinControl()
+    _thread.list()
+    mytft=tft_Control()
+    mypins=pin_Control()
+    mybtn=btn_Control()
+    mybtn.activate_button()
     th1 = _thread.start_new_thread("WIFITH#1", mywlanlib.setup_network, ())
     th3 = _thread.start_new_thread("PINCTL#1", mypins.startPinThread, ())
-    th2 = _thread.start_new_thread("TFTTH#1", pcControl.monitor_data, ())
-    pcControl.send_message_to_tft("line1", "Connecting to wlan..")
+    th2 = _thread.start_new_thread("TFTTH#1", mytft.tft_monitor_data, ())
+    _thread.sendmsg(0, '{"tft_command" : "message", 1 : "Connecting to wlan.."}')
     data["try"]=1
-    while mywlanlib.wlan().isconnected() == False or data["try"] == 10:
+    while mywlanlib.wlan().isconnected() == False and data["try"] <= 10:
       print("Waiting WIFI to be ready")
-      pcControl.send_message_to_tft("line2", "Waiting WIFI to be ready.."+str(data["try"]))
+      _thread.sendmsg(0, '{"tft_command" : "message", 2 : "Waiting WIFI to be ready.. %s"}' % str(data["try"]))
       data["try"]+=1
-      time.sleep(5)
+      time.sleep(1)
       pass
-    
-    pcControl.send_message_to_tft("line3", "Connection established..")
-    pcControl.clear_display(3)
-    pcControl.empty_buffer()
-    pcControl.send_message_to_tft("line1", "IP Address : "+mywlanlib.get_ip())
-    pcControl.activate_button()
+    _thread.sendmsg(0, '{"tft_command" : "message", 3 : "Connection established.."}')
+    print("Done")
     srv = MicroWebSrv()
     srv.MaxWebSocketRecvLen     = 256
     srv.WebSocketThreaded       = ws_run_in_thread
     srv.WebSocketStackSize      = 4096
     srv.Start(threaded=srv_run_in_thread, stackSize=8192)
+    _thread.sendmsg(0, '{"tft_command" : "message", 4 : "Web server started.."}')
+    time.sleep(1)
+    _thread.sendmsg(0, '{"tft_command" : "message", "clear" : "True", "center" : "IP Address : %s"}' % mywlanlib.get_ip())
+    if mywlanlib.get_ip() == "0.0.0.0":
+      try_again()
   except Exception as e:
     print("[EXCEPTION] - Exception in main thread : %s" % _thread.getSelfName())
     print(e)
     pass
 if __name__ == "__main__":
-    gc.collect()
     main()
     #test()

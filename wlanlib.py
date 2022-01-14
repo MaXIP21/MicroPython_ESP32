@@ -32,13 +32,13 @@ class wlan_control:
     @classmethod
     async def manage(self):
         while True:
-            status = self.wlan().status()
-            if (status != network.STAT_GOT_IP) or \
-            (self.wlan().ifconfig()[0] == '0.0.0.0'):  
-                print("Network not connected: managing")
-                self.setup_network()
-            await asyncio.sleep(10)  
-    
+          status = self.wlan().status()
+          if (status != network.STAT_GOT_IP) or \
+          (self.wlan().ifconfig()[0] == '0.0.0.0'):  
+              print("Network not connected: managing")
+              self.setup_network()
+          await asyncio.sleep(10)  
+  
     @classmethod
     def wlan(self):
         return network.WLAN(network.STA_IF)

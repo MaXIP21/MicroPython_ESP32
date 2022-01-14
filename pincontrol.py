@@ -1,10 +1,9 @@
-
 from machine import Pin
 import time
 import json
 import _thread
 
-class pinControl:
+class pin_Control:
     def __init__(self):
         self.resetpin=15
         self.powerpin=22
@@ -76,7 +75,7 @@ class pinControl:
               typ, sender, msg = _thread.getmsg()
               if msg:
                   # Reply to sender, we can analyze the message first
-                  _thread.sendmsg(sender, "[%s] Hi %s, received your message." % (_thread.getSelfName(), _thread.getThreadName(sender)))
+                  #_thread.sendmsg(sender, "[%s] Hi %s, received your message." % (_thread.getSelfName(), _thread.getThreadName(sender)))
                   self.parse_json_message(msg)
                   if "command" in self.jsonobj:
                     if self.jsonobj["command"] == "pressReset":
@@ -92,6 +91,3 @@ class pinControl:
               print("Exception occured in startPinThread() ")
               print(e)
               pass
-
-
-
