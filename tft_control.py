@@ -88,6 +88,8 @@ class tft_Control:
                   self.print_message_to_tft()
                 elif self.jsonobj["tft_command"] == "toggleDisplay":
                   print("Toggling display")
+                else:
+                  print("Unknown command")
         except Exception as e:
           print("Exception in thread %s" % _thread.getSelfName())
           print(e)
